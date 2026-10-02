@@ -38,7 +38,7 @@ export class ChanceStraight {
           const availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, val, -1, 1);
           if (availableCards.length) {
             foundHand.cards.push(availableCards[0]!.value);
-            foundHandCards.push(availableCards[0]);
+            foundHandCards.push(availableCards[0]!);
           }
         }
         foundHand.foundHandCards = foundHandCards;
@@ -81,7 +81,7 @@ export class ChanceStraight {
 
     const outs: number[] = [];
     for (let i = 0; i < amount; i++) {
-      const out = this.probabilityCalculator.getOuts(revealedCards, cardsNeed[i]);
+      const out = this.probabilityCalculator.getOuts(revealedCards, cardsNeed[i]!);
       if (out === 0) return 0;
       outs.push(out);
     }

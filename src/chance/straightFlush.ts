@@ -37,7 +37,7 @@ export function searchStraightFlushPerc(
 
   const outs: number[] = [];
   for (let i = 0; i < amount; i++) {
-    const out = probabilityCalculator.getOuts(revealedCards, cardsNeed[i], cardColor);
+    const out = probabilityCalculator.getOuts(revealedCards, cardsNeed[i]!, cardColor);
     if (out === 0) return 0;
     outs.push(out);
   }
@@ -86,7 +86,7 @@ export class ChanceStraightFlush {
                 const availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, val, -1, 1);
                 if (availableCards.length) {
                   foundHand.cards.push(availableCards[0]!.value);
-                  foundHandCards.push(availableCards[0]);
+                  foundHandCards.push(availableCards[0]!);
                 }
               }
               foundHand.foundHandCards = foundHandCards;
@@ -121,7 +121,7 @@ export class ChanceRoyalFlush {
     };
     const projects: ChanceResult['projects'] = [];
     let totalPerHand = 0;
-    const straightPattern: (string[] | undefined)[] = [[], [], [], []];
+    const straightPattern: string[][] = [[], [], [], []];
 
     if (revealedCards.length + remainingCards < 5) {
       return { total: 0, foundHand: null, foundHandCards: [], projects: [] };
@@ -131,7 +131,7 @@ export class ChanceRoyalFlush {
       if (this.probabilityCalculator.getColorCount(revealedCards, color) + remainingCards >= 5) {
         const project: ChanceResult['projects'][number] = { card: 14, perc: 0, project: [] };
         const perc = searchStraightFlushPerc(
-          this.probabilityCalculator, revealedCards, 14, color, remainingCards, cardsInDeck, straightPattern[color]
+          this.probabilityCalculator, revealedCards, 14, color, remainingCards, cardsInDeck, straightPattern[color]!
         );
         project.perc = perc;
         projects.push(project);
@@ -143,7 +143,7 @@ export class ChanceRoyalFlush {
             const availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, v, -1, 1);
             if (availableCards.length) {
               foundHand.cards.push(availableCards[0]!.value);
-              foundHandCards.push(availableCards[0]);
+              foundHandCards.push(availableCards[0]!);
             }
           }
           foundHand.foundHandCards = foundHandCards;

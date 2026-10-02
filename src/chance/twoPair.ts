@@ -26,7 +26,7 @@ export class ChanceTwoPair {
     const minSameKind = 2 - remainingCards;
     if (minSameKind > 0 && sameKindHand[minSameKind]! === 0)
       return { total: 0, foundHand: null, foundHandCards: [], projects: [] };
-    if (remainingCards === 0 && sameKindHand[2] < 2)
+    if (remainingCards === 0 && sameKindHand[2]! < 2)
       return { total: 0, foundHand: null, foundHandCards: [], projects: [] };
     if (remainingCards === 1 && sameKindHand[2]! === 0)
       return { total: 0, foundHand: null, foundHandCards: [], projects: [] };
@@ -46,12 +46,12 @@ export class ChanceTwoPair {
           let availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, i, -1, 2);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
             if (h < 1) foundHand.cards.push(availableCards[h]!.value);
-            foundHandCards.push(availableCards[h]);
+            foundHandCards.push(availableCards[h]!);
           }
           availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, j, -1, 2);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
             if (h < 1) foundHand.cards.push(availableCards[h]!.value);
-            foundHandCards.push(availableCards[h]);
+            foundHandCards.push(availableCards[h]!);
           }
           foundHand.foundHandCards = foundHandCards;
           found = true;

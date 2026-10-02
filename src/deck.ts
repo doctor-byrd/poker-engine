@@ -1,5 +1,5 @@
 import { Card } from './card.js';
-import { CardData } from './constants.js';
+import type { CardData } from './constants.js';
 
 /**
  * Standard 52-card deck with Fisher-Yates shuffle.
