@@ -1,6 +1,5 @@
 /**
  * Core enums, literal types and shared interfaces for the poker engine.
- * Ported from backend/src/game/poker/PokerConstants.js
  */
 
 export const Action = {
@@ -18,25 +17,8 @@ export const PokerHand = {
 } as const;
 export type PokerHandValue = (typeof PokerHand)[keyof typeof PokerHand];
 
-export const BotType = {
-  looseAggressive: 0, loosePatient: 1, thightAggressive: 2, thightPatient: 3,
-} as const;
-export type BotTypeValue = (typeof BotType)[keyof typeof BotType];
-
-export const BluffType = {
-  prove: 0, steal: 1, badFuture: 2, goodFuture: 3, fake: 4, call: 5, none: 6,
-} as const;
-export type BluffTypeValue = (typeof BluffType)[keyof typeof BluffType];
-
 export const CardColor = { spades: 0, heart: 1, diamonds: 2, clubs: 3 } as const;
 export type CardColorValue = (typeof CardColor)[keyof typeof CardColor];
-
-export const TableType = {
-  tournament: 0, houses: 1, coalMine: 2, tutorial: 3, tutorialSelect: 8,
-} as const;
-export type TableTypeValue = (typeof TableType)[keyof typeof TableType];
-
-export const Direction = { Left: 0, Down: 1, Right: 2, Up: 3 } as const;
 
 export const HandWin = { hand1: 0, hand2: 1, tie: 2 } as const;
 export type HandWinValue = (typeof HandWin)[keyof typeof HandWin];
@@ -47,15 +29,14 @@ export interface CardData {
   color: number; // 0=spades,1=heart,2=diamonds,3=clubs
 }
 
-/** A decision made by a player (human or bot). */
+/** A decision made by a player. */
 export interface Decision {
   action: ActionValue;
   betIncrement: number;
   playerChair: number;
-  houseIdBet?: string[];
 }
 
-/** Per-phase action counters used for bot memory / statistics. */
+/** Per-phase action counters tracked by the GameObserver. */
 export interface ActionCounters {
   fold: number; check: number; call: number; raise: number;
   bet: number; bluff: number; allIn: number; total: number;
@@ -74,7 +55,7 @@ export interface ObserverState {
   playerChips: number[];
   playerBet: number[];
   playerDropped: number[];
-  pot: { betInTable: number; houseId: string[] };
+  pot: { betInTable: number };
   turnPlayer: number;
   leaderBetPlayer: number;
   blindIndex: number;
@@ -83,7 +64,6 @@ export interface ObserverState {
   playersMemory: PlayerMemory[];
   totalMemory: PlayerMemory[];
   totalRaiseInRound: number;
-  botAllIn: number;
 }
 
 /** Result of one "chance" evaluation (e.g. probability of making a pair). */
@@ -119,21 +99,9 @@ export interface Rankings {
   otherHighRanking: number;
 }
 
-/** Minimal view of the observer required by the evaluator / bots. */
+/** Minimal view of the observer required by the hand evaluator. */
 export interface ObserverLike {
   getCardsInTable(): CardData[];
   getCardsInDeck(): number;
   getGamePhase(): GamePhaseValue;
-  [key: string]: any;
-}
-
-/** Minimal player contract used by Room/Bot code. */
-export interface PlayerLike {
-  chair: number;
-  chips: number;
-  bet: number;
-  lose: boolean;
-  hand: CardData[];
-  getChips(): number;
-  getHand(): CardData[];
 }

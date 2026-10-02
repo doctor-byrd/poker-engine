@@ -27,7 +27,7 @@ export function checkSameKind(
 
   const minSameKind = sameAmount - remainingCards;
   const sameKindHand = probabilityCalculator.getSameKinds(revealedCards);
-  if (minSameKind > 0 && sameKindHand[minSameKind] === 0) {
+  if (minSameKind > 0 && sameKindHand[minSameKind]! === 0) {
     return { total: 0, foundHand: null, foundHandCards: [], projects: [] };
   }
 
@@ -43,7 +43,7 @@ export function checkSameKind(
       const foundHandCards: CardData[] = [];
       const availableCards = probabilityCalculator.getAvailableCard(revealedCards, i, -1, sameAmount);
       for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
-        foundHand.cards.push(availableCards[h].value);
+        foundHand.cards.push(availableCards[h]!.value);
         foundHandCards.push(availableCards[h]);
       }
       foundHand.foundHandCards = foundHandCards;

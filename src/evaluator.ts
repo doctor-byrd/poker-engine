@@ -8,6 +8,9 @@ import { ChanceFlush } from './chance/flush.js';
 import { ChanceFullHouse } from './chance/fullHouse.js';
 import { ChanceStraightFlush, ChanceRoyalFlush } from './chance/straightFlush.js';
 
+/** Result of evaluating a concrete hand (one entry of the chance-hand table). */
+export type HandResult = ChanceResult & { foundHandCards: CardData[] };
+
 /** Shape of the (sub-)config required by the evaluator. */
 export interface EvaluatorConfig {
   pattern: number[][]; // Pascal triangle: pattern[n][k-1] = C(n,k)
@@ -19,14 +22,13 @@ export interface EvaluatorConfig {
 
 /**
  * HandEvaluator – finds the best hand, compares hands, and computes
- * probabilistic hand rankings used by the bots.
- * Ported from PokerHandEvaluator.js.
+ * probabilistic hand rankings / win percentages.
  */
 export class HandEvaluator {
   gameObserver: ObserverLike;
   config: EvaluatorConfig;
   probabilityCalculator: ProbabilityCalculator;
-  chanceHands: ReturnType<HandEvaluator['createChanceHands']>;
+  chanceHands: { check(revealed: CardData[], own: CardData[], remaining: number, deck: number): HandResult }[];
   firstPartPerc!: number[][];
   secondPartPerc!: number[][];
 
@@ -34,10 +36,12 @@ export class HandEvaluator {
     this.gameObserver = gameObserver;
     this.config = config;
     this.probabilityCalculator = new ProbabilityCalculator();
-    // Inject pattern table into probability calculator
-    this.probabilityCalculator.getPatterns = (newCard: number, amount: number) => {
-      return this.config.pattern[amount][newCard - 1];
-    };
+    // Optionally inject a precomputed binomial table into the calculator.
+    if (config.pattern && config.pattern.length > 0) {
+      this.probabilityCalculator.getPatterns = (newCard: number, amount: number) => {
+        return config.pattern[amount]![newCard - 1]!;
+      };
+    }
     this.chanceHands = this.createChanceHands();
     this.initPartPerc();
   }
@@ -49,20 +53,20 @@ export class HandEvaluator {
     for (let i = 0; i < amount; i++) {
       this.firstPartPerc[i] = [];
       this.secondPartPerc[i] = [];
-      const subHandValues = this.config.subHandValues[i];
-      const secondPartValues = this.config.secondPartValues[i];
-      const maxPercValueFirstPart = subHandValues[subHandValues.length - 1];
-      const maxPercValueSecondPart = secondPartValues[secondPartValues.length - 1];
+      const subHandValues = this.config.subHandValues[i]!;
+      const secondPartValues = this.config.secondPartValues[i]!;
+      const maxPercValueFirstPart = subHandValues[subHandValues.length - 1]!;
+      const maxPercValueSecondPart = secondPartValues[secondPartValues.length - 1]!;
       for (let j = 0; j < subHandValues.length; j++) {
-        this.firstPartPerc[i][j] = (110 * subHandValues[j]) / maxPercValueFirstPart;
-        this.secondPartPerc[i][j] = (110 * secondPartValues[j]) / maxPercValueSecondPart;
+        this.firstPartPerc[i]![j] = (110 * subHandValues[j]!) / maxPercValueFirstPart;
+        this.secondPartPerc[i]![j] = (110 * secondPartValues[j]!) / maxPercValueSecondPart;
       }
     }
   }
 
   createChanceHands() {
     const pc = this.probabilityCalculator;
-    const hands: ChanceResult[] & Record<number, any> = [] as any;
+    const hands: HandEvaluator['chanceHands'] = [];
     hands[0] = new ChanceHighestCard(pc);
     hands[1] = new ChancePair(pc);
     hands[2] = new ChanceTwoPair(pc);
@@ -83,8 +87,8 @@ export class HandEvaluator {
     if ((best1.foundHand?.category ?? -1) > (best2.foundHand?.category ?? -1)) return HandWin.hand1;
     if ((best1.foundHand?.category ?? -1) < (best2.foundHand?.category ?? -1)) return HandWin.hand2;
     for (let i = 0; i < (best1.foundHand?.cards.length ?? 0); i++) {
-      if (best1.foundHandCards[i].value > best2.foundHandCards[i].value) return HandWin.hand1;
-      if (best1.foundHandCards[i].value < best2.foundHandCards[i].value) return HandWin.hand2;
+      if (best1.foundHandCards[i]!.value > best2.foundHandCards[i]!.value) return HandWin.hand1;
+      if (best1.foundHandCards[i]!.value < best2.foundHandCards[i]!.value) return HandWin.hand2;
     }
     return HandWin.tie;
   }
@@ -96,21 +100,21 @@ export class HandEvaluator {
     return bestHand.foundHand ? bestHand.foundHand.category : 0;
   }
 
-  getBestHand(revealedCards: CardData[], ownCards: CardData[]) {
+  getBestHand(revealedCards: CardData[], ownCards: CardData[]): HandResult {
     const handResult = this.getHandPercentage(revealedCards, ownCards, 0);
     if (handResult.handFound !== -1) {
-      return handResult.chanceHandData[handResult.handFound];
+      return handResult.chanceHandData[handResult.handFound]!;
     }
-    return { total: 0, foundHand: null, foundHandCards: [] as CardData[], projects: [] };
+    return { total: 0, foundHand: null, foundHandCards: [], projects: [] };
   }
 
   getHandPercentage(revealedCards: CardData[], ownCards: CardData[], remainingCards: number): PercentageHands {
-    const chanceHandList: ChanceResult[] = [];
+    const chanceHandList: HandResult[] = [];
     let handFound = -1;
     let handCardAmount = 0;
     const cardsInDeck = this.gameObserver.getCardsInDeck();
     for (let i = this.chanceHands.length - 1; i >= 0; i--) {
-      const chanceHand: ChanceResult & { foundHandCards?: CardData[] } = this.chanceHands[i].check(
+      const chanceHand: HandResult = this.chanceHands[i]!.check(
         revealedCards, ownCards, remainingCards, cardsInDeck
       );
       if (chanceHand.total > 100) chanceHand.total = 100;
@@ -126,7 +130,10 @@ export class HandEvaluator {
     return { chanceHandData: chanceHandList, handCardAmount, handFound };
   }
 
-  addKickerCards(chanceHand: ChanceResult & { foundHand: NonNullable<ChanceResult['foundHand']> }, revealedCards: CardData[]): void {
+  addKickerCards(chanceHand: HandResult & { foundHand: NonNullable<ChanceResult['foundHand']> }, revealedCards: CardData[]): void;
+  addKickerCards(chanceHand: HandResult, revealedCards: CardData[]): void;
+  addKickerCards(chanceHand: HandResult, revealedCards: CardData[]): void {
+    if (!chanceHand.foundHand) return;
     let amount = chanceHand.foundHandCards.length;
     if (amount >= 5) return;
     for (let val = 14; val >= 2; val--) {
@@ -136,8 +143,8 @@ export class HandEvaluator {
             let alreadyUsed = false;
             for (let h = 0; h < amount; h++) {
               if (
-                chanceHand.foundHandCards[h].value === val &&
-                chanceHand.foundHandCards[h].color === color
+                chanceHand.foundHandCards[h]!.value === val &&
+                chanceHand.foundHandCards[h]!.color === color
               ) {
                 alreadyUsed = true;
                 break;
@@ -186,16 +193,18 @@ export class HandEvaluator {
     const otherPercentageHands = this.getAllPercentages(tableCards, [], 2);
     const rankings: Rankings[] = [];
     for (let i = 0; i < ownPercentageHands.length; i++) {
-      const ownRanking = this.getHandRanking(playerAmount, ownPercentageHands[i]);
-      const otherRanking = this.getHandRanking(playerAmount, otherPercentageHands[i]);
+      const ownPerc = ownPercentageHands[i]!;
+      const otherPerc = otherPercentageHands[i]!;
+      const ownRanking = this.getHandRanking(playerAmount, ownPerc);
+      const otherRanking = this.getHandRanking(playerAmount, otherPerc);
       let otherHighRanking = otherRanking;
-      if (ownPercentageHands[i].handFound !== -1) {
+      if (ownPerc.handFound !== -1) {
         const ownFoundHand = {
-          cards: [...ownPercentageHands[i].chanceHandData[ownPercentageHands[i].handFound]!.foundHand!.cards],
-          category: ownPercentageHands[i].chanceHandData[ownPercentageHands[i].handFound]!.foundHand!.category,
+          cards: [...ownPerc.chanceHandData[ownPerc.handFound]!.foundHand!.cards],
+          category: ownPerc.chanceHandData[ownPerc.handFound]!.foundHand!.category,
         };
-        ownFoundHand.cards[ownFoundHand.cards.length - 1]++;
-        otherHighRanking = this.getHandRanking(playerAmount, otherPercentageHands[i], ownFoundHand);
+        ownFoundHand.cards[ownFoundHand.cards.length - 1]!++;
+        otherHighRanking = this.getHandRanking(playerAmount, otherPerc, ownFoundHand);
       }
       rankings.push({ ownRanking, otherRanking, otherHighRanking });
     }
@@ -209,8 +218,8 @@ export class HandEvaluator {
     let startCard2 = 2;
     if (foundHand) {
       startHandIndex = foundHand.category;
-      startCard1 = foundHand.cards[0];
-      startCard2 = foundHand.cards[1];
+      startCard1 = foundHand.cards[0]!;
+      startCard2 = foundHand.cards[1]!;
     }
     for (let handIndex = startHandIndex; handIndex < 10; handIndex++) {
       let handKindTotal = 0;
@@ -220,14 +229,14 @@ export class HandEvaluator {
         continue;
       }
       for (let p = chanceHand.projects.length - 1; p >= 0; p--) {
-        const projectHand = chanceHand.projects[p];
+        const projectHand = chanceHand.projects[p]!;
         if (projectHand.card < startCard1) continue;
         if (projectHand.project && projectHand.project.length) {
           for (let q = projectHand.project.length - 1; q >= 0; q--) {
-            if (projectHand.project[q].card < startCard2) continue;
-            const perc = projectHand.project[q].perc;
+            if (projectHand.project[q]!.card < startCard2) continue;
+            const perc = projectHand.project[q]!.perc;
             handKindTotal += this.calcPercToRanking(
-              playerAmount, handIndex, projectHand.card, projectHand.project[q].card, perc
+              playerAmount, handIndex, projectHand.card, projectHand.project[q]!.card, perc
             );
           }
         } else {
@@ -247,15 +256,15 @@ export class HandEvaluator {
     firstCardValue: number, secondCardValue: number, perc: number
   ): number {
     if (perc === 0) return 0;
-    const minHandRanking = this.config.minHandValues[playerAmount][handIndex];
-    const maxHandRanking = this.config.maxHandValues[playerAmount][handIndex];
+    const minHandRanking = this.config.minHandValues[playerAmount]![handIndex]!;
+    const maxHandRanking = this.config.maxHandValues[playerAmount]![handIndex]!;
     const range = maxHandRanking - minHandRanking;
     let firstPart = 0;
     let secondPart = 0;
     if (firstCardValue !== -1) {
-      firstPart = (this.firstPartPerc[handIndex][firstCardValue - 1] * range) / 100;
+      firstPart = (this.firstPartPerc[handIndex]![firstCardValue - 1]! * range) / 100;
       if (secondCardValue !== -1) {
-        secondPart = (this.secondPartPerc[handIndex][secondCardValue - 1] * range) / 100;
+        secondPart = (this.secondPartPerc[handIndex]![secondCardValue - 1]! * range) / 100;
       }
     }
     const totalRank = minHandRanking + firstPart + secondPart;

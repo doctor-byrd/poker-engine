@@ -31,7 +31,7 @@ export function searchStraightFlushPerc(
 
   const pattern = cardsNeed.join();
   for (let i = cardValue + 1; i <= cardValue + 5 && i <= 14; i++) {
-    if (straightPattern[i] === pattern) return 0;
+    if (straightPattern[i]! === pattern) return 0;
   }
   straightPattern[cardValue] = pattern;
 
@@ -85,7 +85,7 @@ export class ChanceStraightFlush {
                 const val = v === 1 ? 14 : v;
                 const availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, val, -1, 1);
                 if (availableCards.length) {
-                  foundHand.cards.push(availableCards[0].value);
+                  foundHand.cards.push(availableCards[0]!.value);
                   foundHandCards.push(availableCards[0]);
                 }
               }
@@ -121,7 +121,7 @@ export class ChanceRoyalFlush {
     };
     const projects: ChanceResult['projects'] = [];
     let totalPerHand = 0;
-    const straightPattern: string[][] = [[], [], [], []];
+    const straightPattern: (string[] | undefined)[] = [[], [], [], []];
 
     if (revealedCards.length + remainingCards < 5) {
       return { total: 0, foundHand: null, foundHandCards: [], projects: [] };
@@ -142,7 +142,7 @@ export class ChanceRoyalFlush {
           for (let v = 14; v > 9; v--) {
             const availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, v, -1, 1);
             if (availableCards.length) {
-              foundHand.cards.push(availableCards[0].value);
+              foundHand.cards.push(availableCards[0]!.value);
               foundHandCards.push(availableCards[0]);
             }
           }
