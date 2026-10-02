@@ -1,7 +1,7 @@
-import { CardData, PlayerLike } from './constants.js';
+import { CardData } from './constants.js';
 
-/** A human (or generic) player at the table. */
-export class Player implements PlayerLike {
+/** A player at the table. */
+export class Player {
   chair: number;
   chips: number;
   isFirstDecision = true;
@@ -16,8 +16,6 @@ export class Player implements PlayerLike {
   lucky = false;
   roundPosition = -1;
   decisionCounter = 1;
-  userId?: string;
-  isHuman = false;
 
   constructor(chair: number, chips: number) {
     this.chair = chair;

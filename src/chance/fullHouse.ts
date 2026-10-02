@@ -1,5 +1,5 @@
 import { PokerHand, CardData, ChanceResult } from '../constants.js';
-import { ProbabilityCalculator } from './probabilityCalculator.js';
+import { ProbabilityCalculator } from './probabilityCalcuator.js';
 
 /** ChanceFullHouse – probability of making a full house. */
 export class ChanceFullHouse {
@@ -58,12 +58,12 @@ export class ChanceFullHouse {
           let availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, i, -1, 3);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
             foundHandCards.push(availableCards[h]);
-            if (h < 2) foundHand.cards.push(availableCards[h].value);
+            if (h < 2) foundHand.cards.push(availableCards[h]!.value);
           }
           availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, j, -1, 2);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
             foundHandCards.push(availableCards[h]);
-            if (h < 1) foundHand.cards.push(availableCards[h].value);
+            if (h < 1) foundHand.cards.push(availableCards[h]!.value);
           }
           foundHand.foundHandCards = foundHandCards;
           broke = true;

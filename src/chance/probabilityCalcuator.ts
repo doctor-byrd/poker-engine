@@ -1,8 +1,8 @@
-import { CardData, PlayerLike } from '../constants.js';
+import { CardData, ChanceResult } from '../constants.js';
 
 /**
  * ProbabilityCalculator – card counting and combinatorial probability.
- * Used by all Chance* classes. The Pascal-triangle `getPatterns` is normally
+ * Used by all Chance* classes. The Pascal-triangle `getPatterns` may be
  * overridden (injected) by the HandEvaluator with config.pattern; a built-in
  * implementation is provided as fallback so the class works standalone.
  */
@@ -27,11 +27,11 @@ export class ProbabilityCalculator {
     let totalOutsPattern = 1;
     for (let i = 0; i < needed.length; i++) {
       if (same[i]) {
-        totalOutsPattern *= this.getPatterns(needed[i], outs[i]);
+        totalOutsPattern *= this.getPatterns(needed[i]!, outs[i]!);
       } else {
         totalOutsPattern *= this.multiplyOuts(outs);
       }
-      totalNeeded += needed[i];
+      totalNeeded += needed[i]!;
     }
     const deckAmountTemp = cardsInDeck - totalNeeded;
     const newCardsLeft = remainingCard - totalNeeded;
@@ -47,7 +47,7 @@ export class ProbabilityCalculator {
   getColorCount(revealedCards: CardData[], color: number): number {
     let count = 0;
     for (let i = 0; i < revealedCards.length; i++) {
-      if (revealedCards[i].color === color) count++;
+      if (revealedCards[i]!.color === color) count++;
     }
     return count;
   }
@@ -56,7 +56,7 @@ export class ProbabilityCalculator {
   getValueCount(revealedCards: CardData[], value: number): number {
     let count = 0;
     for (let i = 0; i < revealedCards.length; i++) {
-      if (revealedCards[i].value === value) count++;
+      if (revealedCards[i]!.value === value) count++;
     }
     return count;
   }
@@ -65,8 +65,8 @@ export class ProbabilityCalculator {
   isCardRevealed(revealedCards: CardData[], value: number, color: number): boolean {
     for (let i = 0; i < revealedCards.length; i++) {
       if (
-        (value === -1 || revealedCards[i].value === value) &&
-        (color === -1 || revealedCards[i].color === color)
+        (value === -1 || revealedCards[i]!.value === value) &&
+        (color === -1 || revealedCards[i]!.color === color)
       ) {
         return true;
       }
@@ -74,7 +74,7 @@ export class ProbabilityCalculator {
     return false;
   }
 
-  /** Combination C(amount, newCard). Overridden by HandEvaluator with config table. */
+  /** Combination C(amount, newCard). May be overridden by HandEvaluator with config table. */
   getPatterns(newCard: number, amount: number): number {
     if (newCard <= 0) return 1;
     let result = 1;
@@ -86,7 +86,7 @@ export class ProbabilityCalculator {
 
   multiplyOuts(outs: number[]): number {
     let total = 1;
-    for (let i = 0; i < outs.length; i++) total *= outs[i];
+    for (let i = 0; i < outs.length; i++) total *= outs[i]!;
     return total;
   }
 
@@ -126,11 +126,11 @@ export class ProbabilityCalculator {
     const sameKind = [0, 0, 0, 0, 0];
     const copy = [...revealedCards];
     while (copy.length) {
-      const val = copy[0].value;
+      const val = copy[0]!.value;
       const count = this.getValueCount(copy, val);
-      sameKind[count]++;
+      sameKind[count]!++;
       for (let i = copy.length - 1; i >= 0; i--) {
-        if (copy[i].value === val) copy.splice(i, 1);
+        if (copy[i]!.value === val) copy.splice(i, 1);
       }
     }
     return sameKind;
@@ -144,7 +144,5 @@ export interface ChanceHand {
     ownCards: CardData[],
     remainingCards: number,
     cardsInDeck: number
-  ): import('../constants.js').ChanceResult;
+  ): ChanceResult;
 }
-
-export type { PlayerLike };

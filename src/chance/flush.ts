@@ -1,5 +1,5 @@
 import { PokerHand, CardData, ChanceResult } from '../constants.js';
-import { ProbabilityCalculator } from './probabilityCalculator.js';
+import { ProbabilityCalculator } from './probabilityCalcuator.js';
 
 /** ChanceFlush – probability of making a flush. */
 export class ChanceFlush {
