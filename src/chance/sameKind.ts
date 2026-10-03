@@ -44,7 +44,7 @@ export function checkSameKind(
       const availableCards = probabilityCalculator.getAvailableCard(revealedCards, i, -1, sameAmount);
       for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
         foundHand.cards.push(availableCards[h]!.value);
-        foundHandCards.push(availableCards[h]);
+        foundHandCards.push(availableCards[h]!);
       }
       foundHand.foundHandCards = foundHandCards;
       break;

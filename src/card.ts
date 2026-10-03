@@ -1,4 +1,4 @@
-import { CardData } from './constants.js';
+import type { CardData } from './constants.js';
 
 const SUIT_SYMBOLS = ['♠', '♥', '♦', '♣'];
 const VALUE_LABELS: Record<number, string> = { 11: 'J', 12: 'Q', 13: 'K', 14: 'A' };

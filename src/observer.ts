@@ -1,4 +1,5 @@
-import { CardData, ObserverState, PlayerMemory, ActionCounters } from './constants.js';
+import { GamePhase } from './constants.js';
+import type { CardData, GamePhaseValue, ObserverState, PlayerMemory, ActionCounters } from './constants.js';
 import { Pot } from './pot.js';
 
 /** Events emitted by the GameObserver. */
@@ -21,11 +22,11 @@ export class GameObserver {
   gameId = 0;
   initChip = 0;
 
-  gamePhase!: number;
-  cardsInTable: CardData[];
-  playerChips: number[];
-  playerDropped: number[];
-  playerBet: number[];
+  gamePhase: GamePhaseValue = GamePhase.preflop;
+  cardsInTable: CardData[] = [];
+  playerChips: number[] = [];
+  playerDropped: number[] = [];
+  playerBet: number[] = [];
   totalRaiseInRound = 0;
   totalPot = 0;
   playerAmount!: number;
@@ -98,7 +99,7 @@ export class GameObserver {
 
   /** Called to update turn, blinds, phase, etc. */
   changeTurnData(
-    newTurn: number, gamePhase: number, blindIndex: number,
+    newTurn: number, gamePhase: GamePhaseValue, blindIndex: number,
     leaderBetPlayer: number, playerBigBlind: number, playerSmallBlind: number,
     round: number, cardInDeck: number, headTablePlayer: number
   ): void {
@@ -169,7 +170,7 @@ export class GameObserver {
     }
     return total;
   }
-  getGamePhase(): number { return this.gamePhase; }
+  getGamePhase(): GamePhaseValue { return this.gamePhase; }
   getPhaseName(): 'preflop' | 'flop' | 'turn' | 'river' {
     return (['preflop', 'flop', 'turn', 'river'] as const)[this.gamePhase]!;
   }
@@ -208,7 +209,7 @@ export class GameObserver {
     let total = 0;
     for (let i = 0; i < this.playerAmount; i++) {
       if (this.playerDropped.indexOf(i) === -1 && i !== playerChair) {
-        total += this.playersMemory[playerChair]!.total.raise;
+        total += this.playersMemory[i]!.total.raise;
       }
     }
     return total;
@@ -220,7 +221,7 @@ export class GameObserver {
     let total = 0;
     for (let i = 0; i < this.playerAmount; i++) {
       if (this.playerDropped.indexOf(i) === -1 && i !== playerChair) {
-        total += this.totalMemory[playerChair]!.total.raise;
+        total += this.totalMemory[i]!.total.raise;
       }
     }
     return total;

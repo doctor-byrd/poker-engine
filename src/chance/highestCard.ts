@@ -1,5 +1,5 @@
 import { PokerHand, CardData, ChanceResult } from '../constants.js';
-import { ProbabilityCalculator } from './probabilityCalculator.js';
+import { ProbabilityCalculator } from './probabilityCalcuator.js';
 
 /**
  * ChanceHighestCard – probability of making the best high-card hand.
@@ -36,11 +36,11 @@ export class ChanceHighestCard {
           const foundHandCards: CardData[] = [];
           let availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, i, -1, 1);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
-            foundHandCards.push(availableCards[h]);
+            foundHandCards.push(availableCards[h]!);
           }
           availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, j, -1, 1);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
-            foundHandCards.push(availableCards[h]);
+            foundHandCards.push(availableCards[h]!);
           }
           foundHand.foundHandCards = foundHandCards;
           found = true;

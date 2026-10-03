@@ -1,5 +1,5 @@
 import { CardData, ChanceResult, GamePhase, HandWin, ObserverLike, PercentageHands, Rankings } from './constants.js';
-import { ProbabilityCalculator } from './chance/probabilityCalculator.js';
+import { ProbabilityCalculator } from './chance/probabilityCalcuator.js';
 import { ChanceHighestCard } from './chance/highestCard.js';
 import { ChancePair, ChanceThreeOfKind, ChanceFourOfKind } from './chance/sameKind.js';
 import { ChanceTwoPair } from './chance/twoPair.js';

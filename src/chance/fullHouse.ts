@@ -22,9 +22,9 @@ export class ChanceFullHouse {
     }
 
     const sameKinds = this.probabilityCalculator.getSameKinds(revealedCards);
-    const pairAmount = sameKinds[2];
+    const pairAmount = sameKinds[2]!;
     let amountNeeded = 0;
-    if (sameKinds[3] > 0) {
+    if (sameKinds[3]! > 0) {
       if (pairAmount < 2) amountNeeded++;
     } else {
       amountNeeded++;
@@ -57,12 +57,12 @@ export class ChanceFullHouse {
           const foundHandCards: CardData[] = [];
           let availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, i, -1, 3);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
-            foundHandCards.push(availableCards[h]);
+            foundHandCards.push(availableCards[h]!);
             if (h < 2) foundHand.cards.push(availableCards[h]!.value);
           }
           availableCards = this.probabilityCalculator.getAvailableCard(revealedCards, j, -1, 2);
           for (let h = 0; h < availableCards.length && foundHandCards.length < 5; h++) {
-            foundHandCards.push(availableCards[h]);
+            foundHandCards.push(availableCards[h]!);
             if (h < 1) foundHand.cards.push(availableCards[h]!.value);
           }
           foundHand.foundHandCards = foundHandCards;
